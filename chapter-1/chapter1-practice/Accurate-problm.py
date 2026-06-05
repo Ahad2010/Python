@@ -7,4 +7,7 @@ async def speak(text):
     await communicate.save("output.mp3")
     os.system("start output.mp3")
 
-asyncio.run(speak("Hello! I am speaking with a natural voice My name is Comatoze and i am from porn hub."))
+asyncio.run(speak("Hello! I am speaking with a natural voice My name is Ahad and i am full stack developer and python engineer."))
+
+
+# asyncio.run(speak("Hello! I am speaking with a natural voice My name is Comatoze and i am from porn hub."))
