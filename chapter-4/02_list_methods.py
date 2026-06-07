@@ -15,5 +15,9 @@ l1 = [1,2,3,4,5,60]
 # l1.insert(3,2222222) Insert 22222 such that its indes in the list is 3
 # l1.reverse()
 
+#l1.extend([100]) this is the method of add Number in list
+
+# l1.remove(1) this is the method or remove number in list
+
 print(l1.pop(3))
 print(l1)
