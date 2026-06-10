@@ -12,4 +12,3 @@ elif(a==0):
 else :
     print("you are not above the age of consent")
 print("End of the program")
-
