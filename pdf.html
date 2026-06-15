@@ -1,0 +1,498 @@
+html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funnel — convert any file</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<!-- Conversion engines (all run in the browser) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<style>
+  :root{
+    --ink:#14161B;
+    --ink-soft:#5A606C;
+    --line:#E3E6EC;
+    --paper:#ECEEF2;
+    --surface:#FFFFFF;
+    --accent:#2B4CF0;
+    --accent-press:#1E37C9;
+    --accent-soft:#E9EDFF;
+    --ok:#15924E;
+    --danger:#E0494E;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(20,22,27,.05),0 10px 30px -18px rgba(20,22,27,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:32px 20px 80px}
+
+  /* ---- header ---- */
+  header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .logo{
+    width:34px;height:34px;border-radius:9px;
+    background:var(--ink);color:var(--paper);
+    display:grid;place-items:center;flex-shrink:0;
+  }
+  .logo svg{width:18px;height:18px}
+  h1{font-family:"Space Grotesk",sans-serif;font-size:22px;font-weight:700;margin:0;letter-spacing:-.01em}
+  .tag{color:var(--ink-soft);font-size:14px;margin:2px 0 26px;max-width:60ch}
+  .tag b{color:var(--ink);font-weight:600}
+
+  /* ---- pipeline signature ---- */
+  .pipe{
+    display:flex;align-items:stretch;gap:0;margin-bottom:22px;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow);
+  }
+  .pipe .node{
+    flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:3px;min-width:0;
+  }
+  .pipe .node .k{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+  .pipe .node .v{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pipe .gap{
+    width:62px;flex-shrink:0;display:grid;place-items:center;position:relative;
+    border-left:1px solid var(--line);border-right:1px solid var(--line);
+    background:repeating-linear-gradient(45deg,transparent,transparent 6px,#F3F5F9 6px,#F3F5F9 12px);
+  }
+  .pipe .gap svg{width:22px;height:22px;color:var(--accent)}
+  body.working .pipe .gap svg{animation:slide 1s linear infinite}
+  @keyframes slide{0%{transform:translateX(-4px)}50%{transform:translateX(4px)}100%{transform:translateX(-4px)}}
+
+  /* ---- drop zone ---- */
+  .drop{
+    border:2px dashed var(--line);border-radius:var(--radius);background:var(--surface);
+    padding:42px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;
+  }
+  .drop:hover,.drop:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft)}
+  .drop .icn{width:46px;height:46px;margin:0 auto 12px;color:var(--accent)}
+  .drop .big{font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:18px}
+  .drop .sub{color:var(--ink-soft);font-size:13px;margin-top:4px}
+  .drop .types{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .chip{font-family:"JetBrains Mono",monospace;font-size:11px;padding:3px 8px;border-radius:20px;background:var(--paper);color:var(--ink-soft);border:1px solid var(--line)}
+
+  /* ---- file list ---- */
+  .files{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+  .file{
+    display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-radius:11px;padding:10px 12px;box-shadow:var(--shadow);
+  }
+  .file .thumb{width:42px;height:42px;border-radius:8px;background:var(--paper);flex-shrink:0;
+    display:grid;place-items:center;overflow:hidden;border:1px solid var(--line)}
+  .file .thumb img{width:100%;height:100%;object-fit:cover}
+  .file .thumb .ext{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:600;color:var(--ink-soft)}
+  .file .meta{min-width:0;flex:1}
+  .file .nm{font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .file .sz{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-soft)}
+  .file .x{border:0;background:transparent;color:var(--ink-soft);cursor:pointer;padding:6px;border-radius:7px;line-height:0}
+  .file .x:hover{background:#FBE9E9;color:var(--danger)}
+  .file .x svg{width:16px;height:16px}
+
+  /* ---- controls ---- */
+  .panel{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;box-shadow:var(--shadow)}
+  .panel .lab{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-soft);margin-bottom:10px}
+  .targets{display:flex;flex-wrap:wrap;gap:8px}
+  .target{
+    border:1.5px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;cursor:pointer;
+    font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:14px;color:var(--ink);transition:all .12s;
+  }
+  .target:hover{border-color:var(--accent)}
+  .target[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+  .opts{margin-top:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .opts label{font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:7px;cursor:pointer}
+  .opts input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+
+  .go{
+    margin-top:18px;width:100%;border:0;border-radius:11px;background:var(--accent);color:#fff;cursor:pointer;
+    font-family:"Space Grotesk",sans-serif;font-weight:600;font-size:16px;padding:15px;transition:background .12s;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+  }
+  .go:hover{background:var(--accent-press)}
+  .go:disabled{background:#AAB1C2;cursor:not-allowed}
+  .go .spin{width:17px;height:17px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite;display:none}
+  body.working .go .spin{display:inline-block}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  /* ---- results ---- */
+  .results{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+  .result{
+    display:flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:11px;padding:11px 13px;box-shadow:var(--shadow);
+  }
+  .result .tick{width:30px;height:30px;border-radius:50%;background:#E6F4EC;color:var(--ok);display:grid;place-items:center;flex-shrink:0}
+  .result .tick svg{width:16px;height:16px}
+  .result .nm{flex:1;min-width:0;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dl{border:0;background:var(--ink);color:#fff;cursor:pointer;border-radius:8px;padding:8px 14px;font-weight:600;font-size:13px;
+    font-family:"Inter",sans-serif;white-space:nowrap}
+  .dl:hover{background:#000}
+
+  .note{margin-top:8px;font-size:13px;color:var(--ink-soft)}
+  .note.err{color:var(--danger)}
+
+  .hidden{display:none!important}
+
+  /* footer hint */
+  .foot{margin-top:34px;text-align:center;color:var(--ink-soft);font-size:12.5px;line-height:1.7}
+  .foot b{color:var(--ink);font-weight:600}
+
+  @media (max-width:560px){
+    .pipe{flex-direction:column}
+    .pipe .gap{width:100%;height:40px;border:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .pipe .gap svg{transform:rotate(90deg)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 4h18l-7 9v6l-4 2v-8z"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Funnel</h1>
+    </div>
+  </header>
+  <p class="tag">Drop a file in, pick what you want out. <b>Images ↔ PDF</b>, convert between <b>PNG / JPG / WEBP</b>, split a PDF into images, or merge several PDFs. Everything runs on your device — files never leave your browser.</p>
+
+  <!-- pipeline signature -->
+  <div class="pipe" aria-hidden="true">
+    <div class="node"><span class="k">Input</span><span class="v" id="pipeIn">—</span></div>
+    <div class="gap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+    <div class="node"><span class="k">Output</span><span class="v" id="pipeOut">—</span></div>
+  </div>
+
+  <!-- drop zone -->
+  <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose files or drag them here">
+    <div class="icn" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg>
+    </div>
+    <div class="big">Drop files here</div>
+    <div class="sub">or click to browse — you can add several at once</div>
+    <div class="types">
+      <span class="chip">JPG</span><span class="chip">PNG</span><span class="chip">WEBP</span>
+      <span class="chip">GIF</span><span class="chip">BMP</span><span class="chip">PDF</span>
+    </div>
+    <input type="file" id="picker" multiple accept="image/*,application/pdf" class="hidden">
+  </div>
+
+  <div class="files" id="files"></div>
+
+  <!-- conversion panel -->
+  <div class="panel hidden" id="panel">
+    <div class="lab">Convert to</div>
+    <div class="targets" id="targets"></div>
+    <div class="opts" id="opts"></div>
+    <button class="go" id="go"><span class="spin"></span><span id="goLabel">Convert</span></button>
+    <div class="note" id="note"></div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <p class="foot">
+    Need <b>Word, Excel or PowerPoint → PDF</b>? Those need a small server step — ask and I'll show you how to add it.<br>
+    Built to run entirely offline in your browser. No uploads, no accounts.
+  </p>
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const els = {
+  drop: document.getElementById('drop'),
+  picker: document.getElementById('picker'),
+  files: document.getElementById('files'),
+  panel: document.getElementById('panel'),
+  targets: document.getElementById('targets'),
+  opts: document.getElementById('opts'),
+  go: document.getElementById('go'),
+  goLabel: document.getElementById('goLabel'),
+  note: document.getElementById('note'),
+  results: document.getElementById('results'),
+  pipeIn: document.getElementById('pipeIn'),
+  pipeOut: document.getElementById('pipeOut'),
+};
+
+let items = [];          // {file, kind:'image'|'pdf', url}
+let selectedTarget = null;
+
+const fmtSize = b => b < 1024 ? b+' B' : b < 1048576 ? (b/1024).toFixed(1)+' KB' : (b/1048576).toFixed(1)+' MB';
+const ext = name => (name.split('.').pop()||'').toUpperCase();
+
+/* ---------- intake ---------- */
+els.drop.addEventListener('click', ()=>els.picker.click());
+els.drop.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();els.picker.click();} });
+els.picker.addEventListener('change', e=>addFiles(e.target.files));
+['dragenter','dragover'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>els.drop.addEventListener(ev,e=>{e.preventDefault();els.drop.classList.remove('over');}));
+els.drop.addEventListener('drop', e=>addFiles(e.dataTransfer.files));
+
+function addFiles(list){
+  for(const f of list){
+    const isPdf = f.type==='application/pdf' || /\.pdf$/i.test(f.name);
+    const isImg = f.type.startsWith('image/') || /\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name);
+    if(!isPdf && !isImg) continue;
+    items.push({ file:f, kind:isPdf?'pdf':'image', url:URL.createObjectURL(f) });
+  }
+  els.results.innerHTML='';
+  render();
+}
+
+function render(){
+  // file list
+  els.files.innerHTML='';
+  items.forEach((it,i)=>{
+    const row=document.createElement('div'); row.className='file';
+    const thumb = it.kind==='image'
+      ? `<div class="thumb"><img src="${it.url}" alt=""></div>`
+      : `<div class="thumb"><span class="ext">PDF</span></div>`;
+    row.innerHTML = `${thumb}
+      <div class="meta"><div class="nm">${it.file.name}</div>
+      <div class="sz">${ext(it.file.name)} · ${fmtSize(it.file.size)}</div></div>
+      <button class="x" title="Remove" aria-label="Remove ${it.file.name}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>`;
+    row.querySelector('.x').onclick=()=>{ URL.revokeObjectURL(it.url); items.splice(i,1); render(); };
+    els.files.appendChild(row);
+  });
+  buildTargets();
+}
+
+/* ---------- decide what conversions are valid ---------- */
+function buildTargets(){
+  selectedTarget=null; els.note.textContent=''; els.note.className='note';
+  if(!items.length){ els.panel.classList.add('hidden'); setPipe(); return; }
+  els.panel.classList.remove('hidden');
+
+  const imgs = items.filter(i=>i.kind==='image').length;
+  const pdfs = items.filter(i=>i.kind==='pdf').length;
+  let targets=[];
+
+  if(imgs && !pdfs){
+    targets=[
+      {id:'img2pdf', label: imgs>1?'PDF (one file)':'PDF'},
+      {id:'png', label:'PNG'},
+      {id:'jpg', label:'JPG'},
+      {id:'webp', label:'WEBP'},
+    ];
+  } else if(pdfs && !imgs){
+    targets=[];
+    if(pdfs>1) targets.push({id:'merge', label:'Merged PDF'});
+    targets.push({id:'pdf2png', label:'PNG images'});
+    targets.push({id:'pdf2jpg', label:'JPG images'});
+  } else {
+    els.targets.innerHTML='';
+    els.opts.innerHTML='';
+    els.go.disabled=true;
+    els.note.className='note err';
+    els.note.textContent='Mixing images and PDFs at once isn’t supported — convert one type at a time.';
+    setPipe();
+    return;
+  }
+
+  els.targets.innerHTML='';
+  targets.forEach((t,idx)=>{
+    const b=document.createElement('button');
+    b.className='target'; b.textContent=t.label; b.setAttribute('aria-pressed','false');
+    b.onclick=()=>{ selectTarget(t.id); };
+    b.dataset.id=t.id;
+    els.targets.appendChild(b);
+    if(idx===0) selectTargetEl(b, t.id);
+  });
+}
+
+function selectTarget(id){
+  selectedTarget=id;
+  [...els.targets.children].forEach(b=>b.setAttribute('aria-pressed', b.dataset.id===id?'true':'false'));
+  buildOpts(); setPipe(); els.go.disabled=false;
+}
+function selectTargetEl(b,id){ selectTarget(id); }
+
+function buildOpts(){
+  els.opts.innerHTML='';
+  // single combined PDF vs per-file is implicit; offer "fit to A4" for img2pdf
+  if(selectedTarget==='img2pdf'){
+    els.opts.innerHTML = `<label><input type="checkbox" id="optA4"> Fit each image to an A4 page (adds white margins)</label>`;
+  }
+  if(selectedTarget==='jpg' || selectedTarget==='pdf2jpg'){
+    els.opts.innerHTML = `<label>JPG quality
+      <input type="range" id="optQ" min="40" max="100" value="92" style="accent-color:var(--accent)">
+      <span id="optQv" style="font-family:'JetBrains Mono',monospace">92%</span></label>`;
+    const r=document.getElementById('optQ'), v=document.getElementById('optQv');
+    if(r) r.oninput=()=>v.textContent=r.value+'%';
+  }
+  const labels={img2pdf:'Convert to PDF',png:'Convert to PNG',jpg:'Convert to JPG',webp:'Convert to WEBP',
+    merge:'Merge PDFs',pdf2png:'Extract pages as PNG',pdf2jpg:'Extract pages as JPG'};
+  els.goLabel.textContent = labels[selectedTarget]||'Convert';
+}
+
+function setPipe(){
+  if(!items.length){ els.pipeIn.textContent='—'; els.pipeOut.textContent='—'; return; }
+  const set=[...new Set(items.map(i=>ext(i.file.name)))];
+  els.pipeIn.textContent = set.length>1 ? set.length+' files' : (set[0]+(items.length>1?' ×'+items.length:''));
+  const out={img2pdf:'PDF',png:'PNG',jpg:'JPG',webp:'WEBP',merge:'PDF',pdf2png:'PNG',pdf2jpg:'JPG'};
+  els.pipeOut.textContent = selectedTarget ? out[selectedTarget] : '—';
+}
+
+/* ---------- run ---------- */
+els.go.addEventListener('click', run);
+async function run(){
+  if(!selectedTarget) return;
+  document.body.classList.add('working');
+  els.go.disabled=true; els.note.className='note'; els.note.textContent='Working…'; els.results.innerHTML='';
+  try{
+    if(selectedTarget==='img2pdf')      await imagesToPdf();
+    else if(['png','jpg','webp'].includes(selectedTarget)) await imageToImage(selectedTarget);
+    else if(selectedTarget==='merge')   await mergePdfs();
+    else if(selectedTarget==='pdf2png') await pdfToImages('png');
+    else if(selectedTarget==='pdf2jpg') await pdfToImages('jpg');
+    els.note.textContent='';
+  }catch(err){
+    console.error(err);
+    els.note.className='note err'; els.note.textContent='Something went wrong: '+(err.message||err);
+  }
+  document.body.classList.remove('working'); els.go.disabled=false;
+}
+
+/* load an image element from a file */
+function loadImg(file){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>res(img); img.onerror=()=>rej(new Error('Could not read '+file.name));
+    img.src=URL.createObjectURL(file);
+  });
+}
+
+/* IMAGES -> single PDF */
+async function imagesToPdf(){
+  const imgs = items.filter(i=>i.kind==='image');
+  const fitA4 = document.getElementById('optA4')?.checked;
+  let pdf=null;
+  for(let i=0;i<imgs.length;i++){
+    const img=await loadImg(imgs[i].file);
+    const w=img.naturalWidth, h=img.naturalHeight;
+    // normalise to JPEG/PNG data on a canvas (handles webp/gif/bmp too)
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0);
+    const data=cv.toDataURL('image/jpeg',0.95);
+    if(fitA4){
+      if(!pdf) pdf=new jsPDF({unit:'pt',format:'a4'}); else pdf.addPage('a4');
+      const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(), m=24;
+      const scale=Math.min((pw-2*m)/w,(ph-2*m)/h);
+      const dw=w*scale, dh=h*scale;
+      pdf.addImage(data,'JPEG',(pw-dw)/2,(ph-dh)/2,dw,dh);
+    }else{
+      const orient = w>h?'l':'p';
+      if(!pdf) pdf=new jsPDF({unit:'px',format:[w,h],orientation:orient});
+      else pdf.addPage([w,h],orient);
+      pdf.addImage(data,'JPEG',0,0,w,h);
+    }
+    URL.revokeObjectURL(img.src);
+  }
+  const blob=pdf.output('blob');
+  addResult('converted.pdf', blob);
+}
+
+/* IMAGE -> IMAGE (png/jpg/webp) */
+async function imageToImage(target){
+  const imgs=items.filter(i=>i.kind==='image');
+  const mime = target==='png'?'image/png':target==='webp'?'image/webp':'image/jpeg';
+  const q = (document.getElementById('optQ')?.value||92)/100;
+  for(const it of imgs){
+    const img=await loadImg(it.file);
+    const cv=document.createElement('canvas'); cv.width=img.naturalWidth; cv.height=img.naturalHeight;
+    const ctx=cv.getContext('2d');
+    if(target==='jpg'){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height); } // jpg has no transparency
+    ctx.drawImage(img,0,0);
+    const blob=await new Promise(r=>cv.toBlob(r,mime, target==='png'?undefined:q));
+    URL.revokeObjectURL(img.src);
+    if(!blob) throw new Error('Your browser can’t export '+target.toUpperCase());
+    const base=it.file.name.replace(/\.[^.]+$/,'');
+    addResult(base+'.'+target, blob);
+  }
+}
+
+/* MERGE PDFs */
+async function mergePdfs(){
+  const { PDFDocument } = PDFLib;
+  const out=await PDFDocument.create();
+  for(const it of items.filter(i=>i.kind==='pdf')){
+    const bytes=await it.file.arrayBuffer();
+    const src=await PDFDocument.load(bytes,{ignoreEncryption:true});
+    const pages=await out.copyPages(src, src.getPageIndices());
+    pages.forEach(p=>out.addPage(p));
+  }
+  const bytes=await out.save();
+  addResult('merged.pdf', new Blob([bytes],{type:'application/pdf'}));
+}
+
+/* PDF -> images (zip if many pages/files) */
+async function pdfToImages(fmt){
+  const mime = fmt==='png'?'image/png':'image/jpeg';
+  const q=(document.getElementById('optQ')?.value||92)/100;
+  const produced=[];
+  for(const it of items.filter(i=>i.kind==='pdf')){
+    const data=await it.file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data}).promise;
+    const base=it.file.name.replace(/\.pdf$/i,'');
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const vp=page.getViewport({scale:2});
+      const cv=document.createElement('canvas'); cv.width=vp.width; cv.height=vp.height;
+      const ctx=cv.getContext('2d');
+      if(fmt==='jpg'){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height); }
+      await page.render({canvasContext:ctx,viewport:vp}).promise;
+      const blob=await new Promise(r=>cv.toBlob(r,mime, fmt==='png'?undefined:q));
+      produced.push({name:`${base}-p${String(p).padStart(2,'0')}.${fmt}`, blob});
+    }
+  }
+  if(produced.length===1){ addResult(produced[0].name, produced[0].blob); return; }
+  // many images -> zip
+  const zip=new JSZip();
+  produced.forEach(f=>zip.file(f.name, f.blob));
+  const zipBlob=await zip.generateAsync({type:'blob'});
+  addResult(`pages-${fmt}.zip`, zipBlob, `${produced.length} images`);
+}
+
+/* ---------- result row ---------- */
+function addResult(name, blob, sub){
+  const url=URL.createObjectURL(blob);
+  const row=document.createElement('div'); row.className='result';
+  row.innerHTML=`<div class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <div class="nm">${name} <span style="color:var(--ink-soft);font-weight:400">· ${sub||fmtSize(blob.size)}</span></div>
+    <button class="dl">Download</button>`;
+  row.querySelector('.dl').onclick=()=>{
+    const a=document.createElement('a'); a.href=url; a.download=name; a.click();
+  };
+  els.results.appendChild(row);
+}
+</script>
+</body>
+</html>

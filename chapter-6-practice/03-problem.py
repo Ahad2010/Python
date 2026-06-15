@@ -10,3 +10,6 @@ elif Markes>33:
     print("Aby to prhna chor Kam sekh lai")
 
 print("End of the program")
+
+
+print("All problem solving")
