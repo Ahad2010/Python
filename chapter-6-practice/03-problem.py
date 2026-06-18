@@ -1,15 +1,11 @@
-Markes = int(input('Enter your Markes:')) 
+Aness = int(input("Enter Bachi No: "))
+Zaheer = int(input("Enter Bacha No: "))
 
-if Markes>90:
-    print("Excellent You are the topper")
+ 
+if Aness >= Zaheer:
+    print("Aness Nai Zaheer ko Choda")
 
-elif Markes>60:
-    print("Good Keep more hard work")
+elif Zaheer >= Aness:
+    print("Zaheer ko anees nai choda")
 
-elif Markes>33:
-    print("Aby to prhna chor Kam sekh lai")
-
-print("End of the program")
-
-
-print("All problem solving")
+print("Thanks for contacting")
