@@ -1,0 +1,419 @@
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ===== NORMAL HEADER ===== */
+.site-header {
+    background: #1B2A5E;
+    width: 100%;
+    position: relative;
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Logo */
+.header-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+}
+
+.header-logo img {
+    height: 80px;
+    width: auto;
+}
+
+/* Nav */
+.header-nav {
+    display: flex;
+    align-items: center;
+    gap: 35px;
+    list-style: none;
+}
+
+.header-nav li {
+    position: relative;
+}
+
+.header-nav li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.header-nav li a:hover {
+    color: #F5C518;
+}
+
+/* Active */
+.header-nav li.active a {
+    color: #F5C518;
+    border-bottom: 2px solid #F5C518;
+    padding-bottom: 3px;
+}
+
+/* Dropdown Arrow */
+.has-dropdown > a::after {
+    content: "▾";
+    font-size: 12px;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #1B2A5E;
+    min-width: 220px;
+    border-top: 2px solid #F5C518;
+    padding: 10px 0;
+    z-index: 1000;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.dropdown-menu li a {
+    padding: 10px 20px !important;
+    display: block !important;
+    font-size: 14px !important;
+    color: #ffffff !important;
+    border-bottom: none !important;
+}
+
+.dropdown-menu li a:hover {
+    background: #F5C518 !important;
+    color: #1B2A5E !important;
+}
+
+/* Sub Dropdown */
+.sub-dropdown {
+    position: relative;
+}
+
+.sub-dropdown > a::after {
+    content: " ▸";
+}
+
+.sub-dropdown-menu {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: 0;
+    background: #1B2A5E;
+    min-width: 200px;
+    padding: 10px 0;
+    border-top: 2px solid #F5C518;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.sub-dropdown:hover .sub-dropdown-menu {
+    display: block;
+}
+
+.has-dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+/* ===== STICKY HEADER ===== */
+.sticky-header {
+    position: fixed;
+    top: -80px;
+    left: 0;
+    width: 100%;
+    background: #1B2A5E;
+    z-index: 9999;
+    transition: top 0.4s ease;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.4);
+    padding: 8px 0;
+}
+
+.sticky-header.show {
+    top: 0;
+}
+
+.sticky-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 5px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Sticky Logo */
+.sticky-logo img {
+    height: 40px;
+    width: auto;
+}
+
+/* Sticky Nav */
+.sticky-nav {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    list-style: none;
+}
+
+.sticky-nav li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sticky-nav li a:hover {
+    color: #F5C518;
+}
+
+.sticky-nav li.active a {
+    color: #F5C518;
+    border-bottom: 2px solid #F5C518;
+    padding-bottom: 2px;
+}
+
+/* Sticky Dropdown */
+.sticky-nav .has-dropdown > a::after {
+    content: "▾";
+    font-size: 12px;
+}
+
+.sticky-nav .dropdown-menu {
+    top: 130%;
+}
+
+/* ===== HAMBURGER MOBILE ===== */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 5px;
+}
+
+.hamburger span {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background: #ffffff;
+    transition: all 0.3s ease;
+}
+
+/* Mobile Menu */
+.mobile-menu {
+    display: none;
+    background: #1B2A5E;
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-menu.open {
+    display: block;
+}
+
+.mobile-menu ul {
+    list-style: none;
+}
+
+.mobile-menu ul li a {
+    display: block;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 12px 0;
+    font-size: 15px;
+    font-family: 'Poppins', sans-serif;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-menu ul li a:hover {
+    color: #F5C518;
+}
+
+.mobile-submenu {
+    padding-left: 15px;
+    display: none;
+}
+
+.mobile-submenu.open {
+    display: block;
+}
+
+.mobile-submenu li a {
+    font-size: 13px !important;
+    color: #cccccc !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 991px) {
+    .header-nav { display: none; }
+    .hamburger { display: flex; }
+    
+    .sticky-nav { display: none; }
+    .sticky-hamburger { display: flex !important; }
+    
+    .header-inner {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 15px 20px;
+    }
+    
+    .header-logo img { height: 55px; }
+}
+</style>
+
+<!-- ===== NORMAL HEADER ===== -->
+<header class="site-header">
+    <div class="header-inner">
+
+        <!-- Logo -->
+        <a href="/" class="header-logo">
+            <img src="https://rossmckinley.com/wp-content/uploads/2024/01/yellow-logo.png" alt="Ross McKinley">
+        </a>
+
+        <!-- Desktop Nav -->
+        <ul class="header-nav">
+            <li class="active"><a href="/">Home</a></li>
+            <li><a href="/about/">About Us</a></li>
+            <li class="has-dropdown">
+                <a href="/services/">Services</a>
+                <ul class="dropdown-menu">
+                    <li><a href="/services/payroll-accountants-london/">Payroll</a></li>
+                    <li class="sub-dropdown">
+                        <a href="#">TAX</a>
+                        <ul class="sub-dropdown-menu">
+                            <li><a href="/services/tax-returns-services-london/">Tax Returns</a></li>
+                            <li><a href="/services/tax-consultancy-services-london/">Tax Consultancy</a></li>
+                            <li><a href="/services/vat-accountants-london/">VAT Accounting</a></li>
+                            <li><a href="/services/vat-investigation-consultant-london/">VAT Investigation</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="/services/bookkeeping-service-london/">Bookkeeping</a></li>
+                    <li><a href="/services/management-accounts-services-london/">Management Accounts</a></li>
+                    <li><a href="/services/confirmation-statement-filing-service-london/">Confirmation Statement</a></li>
+                    <li><a href="/services/corporation-tax-advisory-service-london/">Corporation Tax Advisory</a></li>
+                    <li><a href="/services/self-assessment-service-london/">Self Assessment</a></li>
+                </ul>
+            </li>
+            <li><a href="/tax-news/">Tax Guides</a></li>
+            <li><a href="/faqs/">FAQ's</a></li>
+            <li><a href="/contact-us/">Contact</a></li>
+        </ul>
+
+        <!-- Hamburger -->
+        <button class="hamburger" onclick="toggleMobile()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about/">About Us</a></li>
+            <li>
+                <a href="#" onclick="toggleSubmenu(event)">Services ▾</a>
+                <ul class="mobile-submenu" id="servicesSubmenu">
+                    <li><a href="/services/payroll-accountants-london/">Payroll</a></li>
+                    <li><a href="/services/tax-returns-services-london/">Tax Returns</a></li>
+                    <li><a href="/services/tax-consultancy-services-london/">Tax Consultancy</a></li>
+                    <li><a href="/services/vat-accountants-london/">VAT Accounting</a></li>
+                    <li><a href="/services/bookkeeping-service-london/">Bookkeeping</a></li>
+                    <li><a href="/services/management-accounts-services-london/">Management Accounts</a></li>
+                    <li><a href="/services/self-assessment-service-london/">Self Assessment</a></li>
+                </ul>
+            </li>
+            <li><a href="/tax-news/">Tax Guides</a></li>
+            <li><a href="/faqs/">FAQ's</a></li>
+            <li><a href="/contact-us/">Contact</a></li>
+        </ul>
+    </div>
+</header>
+
+<!-- ===== STICKY HEADER ===== -->
+<div class="sticky-header" id="stickyHeader">
+    <div class="sticky-inner">
+
+        <!-- Sticky Logo -->
+        <a href="/" class="sticky-logo">
+            <img src="https://rossmckinley.com/wp-content/uploads/2024/12/logo-icon.png" alt="Ross McKinley">
+        </a>
+
+        <!-- Sticky Nav -->
+        <ul class="sticky-nav">
+            <li class="active"><a href="/">Home</a></li>
+            <li><a href="/about/">About Us</a></li>
+            <li class="has-dropdown">
+                <a href="/services/">Services</a>
+                <ul class="dropdown-menu">
+                    <li><a href="/services/payroll-accountants-london/">Payroll</a></li>
+                    <li><a href="/services/tax-consultancy-services-london/">Tax Consultancy</a></li>
+                    <li><a href="/services/vat-accountants-london/">VAT Accounting</a></li>
+                    <li><a href="/services/bookkeeping-service-london/">Bookkeeping</a></li>
+                    <li><a href="/services/self-assessment-service-london/">Self Assessment</a></li>
+                </ul>
+            </li>
+            <li><a href="/tax-news/">Tax Guides</a></li>
+            <li><a href="/faqs/">FAQ's</a></li>
+            <li><a href="/contact-us/">Contact</a></li>
+        </ul>
+
+        <!-- Sticky Hamburger -->
+        <button class="hamburger sticky-hamburger" style="display:none;" onclick="toggleMobile()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+    </div>
+</div>
+
+<script>
+// Sticky Header on Scroll
+window.addEventListener('scroll', function() {
+    var sticky = document.getElementById('stickyHeader');
+    if (window.scrollY > 100) {
+        sticky.classList.add('show');
+    } else {
+        sticky.classList.remove('show');
+    }
+});
+
+// Mobile Menu Toggle
+function toggleMobile() {
+    var menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('open');
+}
+
+// Services Submenu Toggle
+function toggleSubmenu(e) {
+    e.preventDefault();
+    var sub = document.getElementById('servicesSubmenu');
+    sub.classList.toggle('open');
+}
+</script>
+ 
