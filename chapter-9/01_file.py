@@ -6,7 +6,7 @@
 
 '''
   
-f = open("f.txt")
+f = open("chapter-9/f.txt")
 data = f.read()
 print(data)
 f.close()
