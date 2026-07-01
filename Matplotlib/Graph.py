@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
-months = ["Jan", "Feb", "Mar", "Apr"]
-sales = [100, 200, 300, 200]
+months = ["Jan", "Feb", "Mar" ]
+sales = [100, 200, 300 ]
 
 plt.plot(months, sales, marker='o')
 plt.xlabel("Month")
