@@ -75,9 +75,6 @@ Contributions are welcome. You can help by:
 - Expanding practice exercises.
 - Suggesting new project ideas.
 
-## License
-
-Add your preferred license here.
 
 ## Author
 
